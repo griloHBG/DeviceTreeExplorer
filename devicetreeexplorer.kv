@@ -1,0 +1,95 @@
+#: include
+<DeviceTreeExplorerRoot@BoxLayout>:
+    orientation: "vertical"
+    BoxLayout:
+        orientation: "horizontal"
+        size_hint_max_y: 50
+        padding: 5
+        Label:
+            text: "Linux kernel branch"
+        Spinner:
+            values: 'toradex_5.4.y', 'toradex_5.4-2.1.x-imx', 'toradex_5.4-2.3.x-imx'
+        Label:
+            text: "Architecture"
+        Spinner:
+            values: 'arm', 'arm64'
+
+    BoxLayout:
+        orientation: "horizontal"
+        size_hint_max_y: 50
+
+        Label:
+            size_hint_x: .1
+            text: "File:"
+        Label:
+            halign: "left"
+            text: "/mnt/Data/Git/linux-toradex/arch/arm/boot/dts/imx6dl-colibri-eval-v3.dts"
+    BoxLayout:
+        orientation: "horizontal"
+        Splitter:
+            sizable_from: 'right'
+            width: 300
+            size_hint_x:3
+            TextInputLineNumber
+
+#                Button:
+#                    text:'i'
+#                    size: 50, 50
+#                    size_hint: None, None
+
+        Accordion:
+            orientation: 'vertical'
+            AccordionItem:
+                title: '1'
+                SearchResults:
+            AccordionItem:
+                title: '1'
+                SearchResults:
+            AccordionItem:
+                title: '1'
+                SearchResults:
+
+
+<SearchResults@BoxLayout>:
+    orientation: 'vertical'
+    BoxLayout:
+        orientation: 'horizontal'
+        height:50
+        size_hint_y: None
+        Button:
+            text: 'load'
+        Button:
+            text: 'del'
+    Label:
+        size_hint_y: None
+        text:'akjsgdaksjdgsakjdhg\nashgdajkshdgakjshdg\nasdghakjshdgk'
+    Label:
+        text: "oi"
+
+<Accordion>:
+    min_space: 30
+
+<AccordionItem>
+    min_space: 30
+
+
+[AccordionItemTitle@Label]:
+    text: ctx.title
+    canvas.before:
+        Color:
+            rgb: 1,1,1
+        BorderImage:
+            source:
+                ctx.item.background_normal if ctx.item.collapse else ctx.item.background_selected
+            pos: self.pos
+            size: self.size
+        PushMatrix
+        Translate:
+            xy: self.center_x, self.center_y
+        Rotate:
+            angle: 90 if ctx.item.orientation == 'horizontal' else 0
+            axis: 0, 0, 1
+        Translate:
+            xy: -self.center_x, -self.center_y
+    canvas.after:
+        PopMatrix
