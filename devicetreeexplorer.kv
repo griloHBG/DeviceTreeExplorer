@@ -1,5 +1,6 @@
-#: include
+#:include TextInputLineNumber/textinputlinenumber.kv
 <DeviceTreeExplorerRoot@BoxLayout>:
+    textinputlinenumber:textinputlinenumber
     orientation: "vertical"
     BoxLayout:
         orientation: "horizontal"
@@ -7,12 +8,15 @@
         padding: 5
         Label:
             text: "Linux kernel branch"
-        Spinner:
-            values: 'toradex_5.4.y', 'toradex_5.4-2.1.x-imx', 'toradex_5.4-2.3.x-imx'
+        Label:
+            bold: True
+            text: root.source_branch
         Label:
             text: "Architecture"
-        Spinner:
-            values: 'arm', 'arm64'
+        Label:
+            bold: True
+            text: root.architecture
+
 
     BoxLayout:
         orientation: "horizontal"
@@ -21,22 +25,48 @@
         Label:
             size_hint_x: .1
             text: "File:"
-        Label:
-            halign: "left"
-            text: "/mnt/Data/Git/linux-toradex/arch/arm/boot/dts/imx6dl-colibri-eval-v3.dts"
+        Spinner:
+            text: root.dts_file
+            values: root.dts_file, 'file1.dts', 'file2.dts'
+            background_color: '888888'
     BoxLayout:
         orientation: "horizontal"
         Splitter:
             sizable_from: 'right'
-            width: 300
-            size_hint_x:3
-            TextInputLineNumber
-
-#                Button:
-#                    text:'i'
-#                    size: 50, 50
-#                    size_hint: None, None
-
+#            width: 500
+#            size_hint_x:3
+            strip_size: 10
+            max_size: root.width-200
+            min_size: 600
+            BoxLayout:
+                orientation: 'vertical'
+                BoxLayout:
+                    size_hint_y: None
+                    height: 50
+                    orientation: 'horizontal'
+                    Button:
+                        text: "Search"
+                        size_hint_x:None
+                        width: 50
+                    Button:
+                        text: '2'
+                        size_hint_x:None
+                        width: 50
+                    Button:
+                        text: '3'
+                        size_hint_x:None
+                        width: 50
+                TextInputLineNumber:
+                    id: textinputlinenumber
+                    text: root.file_content
+                BoxLayout:
+                    size_hint_y: None
+                    height: 30
+                    orientation: 'horizontal'
+                    Label:
+                        text: 'Scroll Y'
+                    Label:
+                        text: str(root.textinputlinenumber.scroll_y)
         Accordion:
             orientation: 'vertical'
             AccordionItem:
@@ -54,10 +84,12 @@
     orientation: 'vertical'
     BoxLayout:
         orientation: 'horizontal'
-        height:50
+        height: 40
         size_hint_y: None
+        spacing: 50
+        padding: 50, 5
         Button:
-            text: 'load'
+            text: 'show'
         Button:
             text: 'del'
     Label:
