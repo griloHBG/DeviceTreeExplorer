@@ -1,3 +1,6 @@
 [submodule "TextInputLineNumber"]
 	path = TextInputLineNumber
 	url = https://github.com/griloHBG/TextInputLineNumber
+[submodule "find-in-devicetree"]
+	path = find-in-devicetree
+	url = https://github.com/griloHBG/find-in-devicetree

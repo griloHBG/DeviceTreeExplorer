@@ -1,7 +1,18 @@
 #:include TextInputLineNumber/textinputlinenumber.kv
+#:import Factory kivy.factory.Factory
+#:import Path pathlib.Path
+#:import partial functools.partial
+
 <DeviceTreeExplorerRoot@BoxLayout>:
     textinputlinenumber:textinputlinenumber
+    current_dts_file:current_dts_file
+    dts_file:None
     orientation: "vertical"
+    little_search_textinput:little_search_textinput
+
+    accordion_result:accordion_result
+    txt_big_search: txt_big_search
+
     BoxLayout:
         orientation: "horizontal"
         size_hint_max_y: 50
@@ -25,10 +36,12 @@
         Label:
             size_hint_x: .1
             text: "File:"
-        Spinner:
-            text: root.dts_file
-            values: root.dts_file, 'file1.dts', 'file2.dts'
-            background_color: '888888'
+        Button:
+            id: current_dts_file
+            text: str(root.dts_file)
+            #values: root.dts_file, 'file1.dts', 'file2.dts'
+            #background_color: '888888'
+            on_press: root.select_dts_popup.set_dts_file=root.set_dts_file;root.select_dts_popup.current_path=str(Path(root.dts_file).parent);root.select_dts_popup.open();
     BoxLayout:
         orientation: "horizontal"
         Splitter:
@@ -44,59 +57,140 @@
                     size_hint_y: None
                     height: 50
                     orientation: 'horizontal'
-                    Button:
-                        text: "Search"
+                    spacing: 3
+                    padding:3
+                    Widget:
                         size_hint_x:None
                         width: 50
                     Button:
-                        text: '2'
+                        id: btn_big_search
+                        text: "Big Search"
                         size_hint_x:None
-                        width: 50
-                    Button:
-                        text: '3'
-                        size_hint_x:None
-                        width: 50
+                        background_color: '00df00'
+                        on_press: root.big_search()
+                    TextInput:
+                        id:txt_big_search
+                        multiline: False
+                        text_validate_unfocus: False
+                        size_hint_y: None
+                        pos_hint: {'center_y': 0.5}
+                        height: btn_big_search.height*.8
+                        on_text_validate: root.big_search()
+
                 TextInputLineNumber:
                     id: textinputlinenumber
                     text: root.file_content
+                    on_cursor: print(self.cursor_index())
+                    #on_focus: l = min(self.amount_lines, max(1,int(go_to_line.text)));self.cursor=(self.cursor[0], l)
                 BoxLayout:
                     size_hint_y: None
                     height: 30
                     orientation: 'horizontal'
                     Label:
-                        text: 'Scroll Y'
+                        size_hint_x:None
+                        text:'Little Search'
+                    TextInput:
+                        id:little_search_textinput
+                        multiline: False
+                        on_text_validate: root.little_search(self.text)
+                        text_validate_unfocus: False
                     Label:
-                        text: str(root.textinputlinenumber.scroll_y)
-        Accordion:
+                        size_hint_x:None
+                        width:20
+                        text: str(root.little_search_result_idx+1) if root.little_search_result_amount > 0 else '0'
+                    Label:
+                        size_hint_x:None
+                        width:5
+                        text:' / '
+                    Label:
+                        size_hint_x:None
+                        width:20
+                        text: str(root.little_search_result_amount)
+                    Label:
+                        size_hint_x:None
+                        text: "Go to line:"
+                    TextInput:
+                        id:go_to_line
+                        size_hint_x:None
+                        #on_text_validate: l = min(root.textinputlinenumber.amount_lines, max(1,int(self.text))); print(textinputlinenumber.cursor); self.text = str(l); root.textinputlinenumber.focus = True; root.textinputlinenumber.cursor=(textinputlinenumber.cursor[0], l-1); textinputlinenumber.focus=True;print(textinputlinenumber.cursor);
+                        on_text_validate: l = min(root.textinputlinenumber.amount_lines, max(1,int(self.text))); self.text = str(l); root.textinputlinenumber.focus = True; root.textinputlinenumber.go_to_line(l); textinputlinenumber.focus=True;
+                        multiline: False
+                        input_filter: 'int'
+#                    Button:
+#                        text: "Go"
+#                        size_hint_x:None
+#                        width: 50
+#                        on_press:  l = min(root.textinputlinenumber.amount_lines, max(1,int(go_to_line.text))); print(textinputlinenumber.cursor); go_to_line.text = str(l); root.textinputlinenumber.focus = True; root.textinputlinenumber.cursor=(textinputlinenumber.cursor[0], l-1)
+
+                BoxLayout:
+                    size_hint_y: None
+                    height: 30
+                    orientation: 'horizontal'
+                    Label:
+                        text: 'Lines:'
+                    Label:
+                        text: str(root.textinputlinenumber.amount_lines)
+        BoxLayout:
             orientation: 'vertical'
-            AccordionItem:
-                title: '1'
-                SearchResults:
-            AccordionItem:
-                title: '1'
-                SearchResults:
-            AccordionItem:
-                title: '1'
-                SearchResults:
+            Label:
+                text: 'Results'
+                bold: True
+                size_hint_y: None
+                height: 40
+            Accordion:
+                id: accordion_result
+                orientation: 'vertical'
 
 
-<SearchResults@BoxLayout>:
-    orientation: 'vertical'
+<InFileResult@BoxLayout>
+    line_number: 0
+    text: 'nothing'
+    search_string: ''
+    selection_start: 0
+    selection_end: 0
+    dts_file: None
+    orientation: 'horizontal'
+    height: text_input.texture_size[1]*2
+    size_hint_y: None
+    padding: 5, 0, 0, 0
+    canvas.before:
+        Color:
+            rgb: .2, .2, .2
+        Line:
+            points: root.pos[0], root.pos[1]+root.height-2, root.pos[0]+root.width, root.pos[1]+root.height-2
+        Line:
+            points: root.pos[0], root.pos[1]+2, root.pos[0]+root.width, root.pos[1]+2
+    Button:
+        id: line_button
+        size_hint_x: None
+        width: self.height*1.5
+        text: str(root.line_number)
+        on_press: print(root.dts_file, root.line_number); root.load_search_hit(root.dts_file, root.line_number, root.selection_start, root.selection_end)
+    Label:
+        id: text_input
+        text: root.text
+        markup: True
+
+<SearchResult@AccordionItem>:
+    container: container
     BoxLayout:
-        orientation: 'horizontal'
-        height: 40
-        size_hint_y: None
-        spacing: 50
-        padding: 50, 5
+        orientation: 'vertical'
         Button:
-            text: 'show'
-        Button:
+            size_hint: None, None
+            size: 50, 40
+            pos_hint: {'right': 1}
             text: 'del'
-    Label:
-        size_hint_y: None
-        text:'akjsgdaksjdgsakjdhg\nashgdajkshdgakjshdg\nasdghakjshdgk'
-    Label:
-        text: "oi"
+            on_press: root.parent.remove_widget(root);print(f'hit removed: {root.dts_path}')
+        ScrollView:
+            do_scroll_x: False
+            do_scroll_y: True
+            bar_width: 10
+            scroll_type: ['bars']
+            BoxLayout:
+                id: container
+                orientation: 'vertical'
+                size_hint: 1, None
+                height: self.minimum_height
 
 <Accordion>:
     min_space: 30
@@ -125,3 +219,108 @@
             xy: -self.center_x, -self.center_y
     canvas.after:
         PopMatrix
+
+<DTSChooser@Popup>:
+    selected_file: selected_file
+
+    title:''
+    selection: file_chooser.selection
+    size_hint: .9, 1
+    size_hint_max_x: 1000
+    set_dts_file: lambda:None
+    current_path:''
+    on_open: file_chooser.path = path.text if not path.text == '' else Path.cwd()
+
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'top'
+        BoxLayout:
+            orientation: 'vertical'
+            size_hint_x: 1
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: .1
+                Label:
+                    text: 'Path'
+                    size_hint_x: .1
+                    halign: 'center'
+                AnchorLayout:
+                    anchor_y: 'center'
+                    padding: 20
+                    TextInput:
+                        id: path
+                        text: root.current_path
+                        height: 30
+                        size_hint_y: None
+                        multiline: False
+                        on_text_validate: file_chooser.path=self.text
+                        text_validate_unfocus: False
+                Label:
+                    text: 'press enter\nto navigate'
+                    size_hint_x: .15
+                    color: '777777'
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint_y: .15
+                spacing: 5
+                Label:
+                    text: 'Filter'
+                    size_hint_x: .25
+                    halign: 'center'
+                TextInput:
+                    id: filter
+                    height: 50
+                    size_hint_y: None
+                    text: ''
+                    hint_text: 'Define a filter for files'
+                    multiline: False
+                    on_text_validate: root.file_search_string=self.text; file_chooser.filters=[partial(root.my_filter, root.file_search_string)]; print(file_chooser.filters)
+                    text_validate_unfocus: False
+                    pos_hint: {'center_y': .5}
+                Button:
+                    text: 'Clear'
+                    on_press: filter.text='*'; file_chooser.file_search_string=filter.text; print(file_chooser.file_search_string)
+                    size_hint: None, None
+                    size: 50, filter.height
+                    pos_hint: {'center_y': .5}
+                Label:
+                    halign: 'center'
+                    text: 'press enter to apply\n(regular expression search)'
+                    color: '777777'
+            BoxLayout:
+                orientation: 'horizontal'
+                size_hint: 1, None
+                height: 30
+                Label:
+                    text: 'Current path:'
+                    size_hint_x: None
+                    width: 100
+                Label:
+                    text: file_chooser.path
+                    text_size: self.size
+                    halign: 'left'
+                    valign: 'middle'
+            FileChooserListView:
+                id: file_chooser
+                multiselect: False
+                path: "/home/grilo/linux-toradex"
+                on_selection: selected_file.color='CCAAFF'
+            AnchorLayout:
+                anchor_y: 'center'
+                anchor_x: 'center'
+                size_hint_y: .15
+                BoxLayout:
+                    orientation: 'vertical'
+                    size_hint_x: .3
+                    Label:
+                        id: selected_file
+                        text: file_chooser.selection[0] if not file_chooser.selection == [] else 'No file selected'
+                        color: 'CCAAFF'
+                    BoxLayout:
+                        orientation: 'horizontal'
+                        Button:
+                            text: 'Select file'
+                            on_press: root.select(file_chooser.selection)
+                        Button:
+                            text: 'Cancel (Esc)'
+                            on_press: root.cancel()
