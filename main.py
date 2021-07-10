@@ -1,5 +1,6 @@
 import argparse
 import re
+from functools import partial
 from pathlib import Path
 
 from colorit import color, Colors
@@ -8,6 +9,7 @@ from kivy.clock import Clock
 from kivy.properties import StringProperty, ObjectProperty, ListProperty, NumericProperty, AliasProperty
 from kivy.uix.accordion import AccordionItem
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
 from kivy.uix.popup import Popup
 from kivy.uix.button import Button
 from kivy.uix.stacklayout import StackLayout
@@ -66,7 +68,9 @@ class DTSChooser(Popup):
 
     selected_file = ObjectProperty(None)
     set_dts_file = ObjectProperty(None)
+    filter = ObjectProperty(None)
     file_search_string = StringProperty('')
+    file_chooser = ObjectProperty(None)
 
     def select(self, selection_list):
         if selection_list == []:
@@ -81,10 +85,24 @@ class DTSChooser(Popup):
         print(file_name)
         if search_string == '':
             search_string = '.+'
-        result = re.search(search_string, file_name)
-        return result != None
+        try:
+            result = re.search(search_string, file_name)
+            return result != None
+        except re.error as e:
+            return False
 
-
+    def do_filter(self):
+        try:
+            re_search = re.compile(self.filter.text)
+        except re.error as e:
+            error_text = str(e).capitalize()
+            error_popup = Popup(title="Filter Error", content=Label(text=f'Regular Expression error:\n\n{error_text}'), size_hint=(.5,.5))
+            error_popup.open()
+            print(e)
+            return
+        self.file_search_string=self.filter.text
+        self.file_chooser.filters=[partial(self.my_filter, self.file_search_string)];
+        print(self.file_chooser.filters)
 
 class DeviceTreeExplorerRoot(BoxLayout):
     dts_file = PathProperty()
@@ -159,7 +177,10 @@ class DeviceTreeExplorerRoot(BoxLayout):
                 self.git = get_repository(self.dts_file)
             except LookupError as e:
                 print(str(e))
-            self.source_branch = str(self.git.active_branch)
+            try:
+                self.source_branch = str(self.git.active_branch)
+            except:
+                self.source_branch = "No branch"
             try:
                 self.architecture = get_architecture(self.dts_file)
             except:

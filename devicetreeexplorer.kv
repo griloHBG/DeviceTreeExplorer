@@ -229,7 +229,9 @@
     size_hint_max_x: 1000
     set_dts_file: lambda:None
     current_path:''
+    filter: filter
     on_open: file_chooser.path = path.text if not path.text == '' else Path.cwd()
+    file_chooser: file_chooser
 
     AnchorLayout:
         anchor_x: 'center'
@@ -274,7 +276,7 @@
                     text: ''
                     hint_text: 'Define a filter for files'
                     multiline: False
-                    on_text_validate: root.file_search_string=self.text; file_chooser.filters=[partial(root.my_filter, root.file_search_string)]; print(file_chooser.filters)
+                    on_text_validate: root.do_filter()
                     text_validate_unfocus: False
                     pos_hint: {'center_y': .5}
                 Button:
