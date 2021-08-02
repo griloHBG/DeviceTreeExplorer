@@ -2,6 +2,7 @@
 #:import Factory kivy.factory.Factory
 #:import Path pathlib.Path
 #:import partial functools.partial
+#:import hex kivy.utils.get_color_from_hex
 
 <DeviceTreeExplorerRoot@BoxLayout>:
     textinputlinenumber:textinputlinenumber
@@ -12,6 +13,8 @@
 
     accordion_result:accordion_result
     txt_big_search: txt_big_search
+
+    deletion_chooser: deletion_chooser
 
     BoxLayout:
         orientation: "horizontal"
@@ -80,7 +83,6 @@
                 TextInputLineNumber:
                     id: textinputlinenumber
                     text: root.file_content
-                    on_cursor: print(self.cursor_index())
                     #on_focus: l = min(self.amount_lines, max(1,int(go_to_line.text)));self.cursor=(self.cursor[0], l)
                 BoxLayout:
                     size_hint_y: None
@@ -112,15 +114,9 @@
                     TextInput:
                         id:go_to_line
                         size_hint_x:None
-                        #on_text_validate: l = min(root.textinputlinenumber.amount_lines, max(1,int(self.text))); print(textinputlinenumber.cursor); self.text = str(l); root.textinputlinenumber.focus = True; root.textinputlinenumber.cursor=(textinputlinenumber.cursor[0], l-1); textinputlinenumber.focus=True;print(textinputlinenumber.cursor);
                         on_text_validate: l = min(root.textinputlinenumber.amount_lines, max(1,int(self.text))); self.text = str(l); root.textinputlinenumber.focus = True; root.textinputlinenumber.go_to_line(l); textinputlinenumber.focus=True;
                         multiline: False
                         input_filter: 'int'
-#                    Button:
-#                        text: "Go"
-#                        size_hint_x:None
-#                        width: 50
-#                        on_press:  l = min(root.textinputlinenumber.amount_lines, max(1,int(go_to_line.text))); print(textinputlinenumber.cursor); go_to_line.text = str(l); root.textinputlinenumber.focus = True; root.textinputlinenumber.cursor=(textinputlinenumber.cursor[0], l-1)
 
                 BoxLayout:
                     size_hint_y: None
@@ -132,15 +128,50 @@
                         text: str(root.textinputlinenumber.amount_lines)
         BoxLayout:
             orientation: 'vertical'
-            Label:
-                text: 'Results'
-                bold: True
+            BoxLayout:
+                orientation: 'horizontal'
                 size_hint_y: None
                 height: 40
+                Label:
+                    text: 'Results'
+                    bold: True
+                DeletionChooser:
+                    id: deletion_chooser
             Accordion:
                 id: accordion_result
                 orientation: 'vertical'
 
+
+
+<DeletionChooser@Button>:
+    on_release: root.dropdown.open(self)
+    text: 'Delete a color'
+
+<CustomDropDown@DropDown>:
+
+<DeletionDropdownItem@BoxLayout>:
+    orientation: 'horizontal'
+    text: 'None' # place holder
+    color: 1, 1, 1 # place holder
+    canvas:
+        Color:
+            rgba: 0,0,0,1
+        Rectangle:
+            size: self.size
+            pos: self.pos
+    Label:
+        text: root.text
+        canvas.before:
+            Color:
+                rgba: root.color
+            Rectangle:
+                size: self.size[0]-4, self.size[1]-4
+                pos: self.pos[0]+2, self.pos[1]+2
+    Button:
+        text: 'X'
+        size_hint_max_x: self.height
+        on_release: root.delete_me()
+        background_color: root.color
 
 <InFileResult@BoxLayout>
     line_number: 0
@@ -165,7 +196,7 @@
         size_hint_x: None
         width: self.height*1.5
         text: str(root.line_number)
-        on_press: print(root.dts_file, root.line_number); root.load_search_hit(root.dts_file, root.line_number, root.selection_start, root.selection_end)
+        on_press: root.load_search_hit(root.dts_file, root.line_number, root.selection_start, root.selection_end)
     Label:
         id: text_input
         text: root.text
@@ -173,14 +204,15 @@
 
 <SearchResult@AccordionItem>:
     container: container
+    title_background_hex_color: '#888888'
     BoxLayout:
         orientation: 'vertical'
         Button:
             size_hint: None, None
             size: 50, 40
             pos_hint: {'right': 1}
-            text: 'del'
-            on_press: root.parent.remove_widget(root);print(f'hit removed: {root.dts_path}')
+            text: 'X'
+            on_press: root.delete_me()
         ScrollView:
             do_scroll_x: False
             do_scroll_y: True
@@ -198,15 +230,17 @@
 <AccordionItem>
     min_space: 30
 
-
 [AccordionItemTitle@Label]:
     text: ctx.title
+    bold: not ctx.item.collapse
+    color: [.8]*3 if ctx.item.collapse else [1.]*3
     canvas.before:
         Color:
-            rgb: 1,1,1
+            rgb: hex(ctx.background_color)
         BorderImage:
             source:
-                ctx.item.background_normal if ctx.item.collapse else ctx.item.background_selected
+                ''# if ctx.item.collapse else ctx.item.background_selected
+#                ctx.item.background_normal if ctx.item.collapse else ctx.item.background_selected
             pos: self.pos
             size: self.size
         PushMatrix
@@ -281,7 +315,7 @@
                     pos_hint: {'center_y': .5}
                 Button:
                     text: 'Clear'
-                    on_press: filter.text='*'; file_chooser.file_search_string=filter.text; print(file_chooser.file_search_string)
+                    on_press: filter.text='*'; file_chooser.file_search_string=filter.text
                     size_hint: None, None
                     size: 50, filter.height
                     pos_hint: {'center_y': .5}
