@@ -16,26 +16,27 @@ I strongly advise to install inside a [Mini]Conda environment :)
 1. Clone this repository and initialize its git submodules
 
 ``` bash
-git clone --recurse-submodules https://github.com/griloHBG/DeviceTreeExplorer
+$ cd ~ # or wherever you would like to clone it :)
+$ git clone --recurse-submodules https://github.com/griloHBG/DeviceTreeExplorer
 ```
 
 ## How to use
 
-1. Navigate to the `arch/<architecture>/boot/dts` of your local kernel repository
+1. Navigate to the `arch/<architecture>/boot/dts` of your local linux kernel repository
 2. Run the `main.py` and pass a `*.dtsi` or `*.dts` (prefferably) as argument
 
    Ex:
-   ```
+   ``` sh
    $ conda activate 
-   $ alias device-tree-explorer="python3 /home/grilo/DeviceTreeExplorer/main.py"
+   $ alias device-tree-explorer="python3 ~/DeviceTreeExplorer/main.py"
    $ cd linux-toradex/arch/arm/boot/dts
    $ device-tree-explorer imx6dl-colibri-eval-v3.dts
    ```
    Or:
-   ```
+   ``` sh
    $ conda activate 
-   $ alias device-tree-explorer="python3 /home/grilo/DeviceTreeExplorer/main.py"
-   $ device-tree-explorer /home/grilo/linux-toradex/arch/arm/boot/dts/imx6dl-colibri-eval-v3.dts
+   $ alias device-tree-explorer="python3 ~/DeviceTreeExplorer/main.py"
+   $ device-tree-explorer ~/linux-toradex/arch/arm/boot/dts/imx6dl-colibri-eval-v3.dts
    ```
 5. (hopefully :p) The GUI will open
    ![](images/img.png)
