@@ -13,7 +13,11 @@ I strongly advise to install inside a [Mini]Conda environment :)
 
 ## How to download the source
 
-`git clone https://github.com/griloHBG/DeviceTreeExplorer`
+1. Clone this repository and initialize its git submodules
+
+``` bash
+git clone --recurse-submodules https://github.com/griloHBG/DeviceTreeExplorer
+```
 
 ## How to use
 

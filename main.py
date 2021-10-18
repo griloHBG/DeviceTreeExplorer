@@ -1,3 +1,4 @@
+#TODO-high: list with recent files!
 import argparse
 import re
 from functools import partial
@@ -281,7 +282,7 @@ class DeviceTreeExplorerRoot(BoxLayout):
                     ifresult.selection_start = hit_start
                     ifresult.selection_end = hit_end
                     r.add_result(ifresult)
-
+                #TODO-high: add entry if nothing found!
                 self.accordion_result.add_widget(r)
 
             self.deletion_chooser.update(self.search_history)
